@@ -1,0 +1,22 @@
+{
+  "name": "coulomb",
+  "version": "0.1.0",
+  "description": "Guy (convenience) that HTTP communication becomes convenient",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noqisofon/coulomb.git"
+  },
+  "keywords": [
+    "http"
+  ],
+  "author": "ned rihine",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/noqisofon/coulomb/issues"
+  },
+  "homepage": "https://github.com/noqisofon/coulomb#readme"
+}
