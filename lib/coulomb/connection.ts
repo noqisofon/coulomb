@@ -1,9 +1,20 @@
-/// <reference path="./utils.ts" />
 /// <reference path="./options.ts" />
+/// <reference path="./utils.ts" />
+/// <reference path="./builder.ts" />
 /// <reference path="./request.ts" />
 
 module Coulomb {
 
+    /*!
+     *
+     */
+    function is_a(that, type_name) {
+        return typeof that === type_name;
+    }
+
+    /*!
+     *
+     */
     export enum Methods {
         GET = 0,
         POST,
@@ -14,34 +25,29 @@ module Coulomb {
         OPTIONS
     };
 
-    export class Connection extends Forwardable {
-        private _params : Utils.ParamsHash ;
-        private _headers : Utils.Headers;
-        private _url_prefix : string;
-        private _builder : Builder;
-        private _options : Hash;
-        private _ssl : SslHash;
-        private _parallel_manager : Utils.ParallelManager;
-        private _default_parallel_manager : Utils.ParallelManager;
-
+    /*!
+     *
+     */
+    export class Connection /* extends Forwardable */ {
         /*!
          * 新しく Coulomb.Connection オブジェクトを作成して返します。
          */
-        constructor(url?, options?, block? : (builder : Connection) => void) {
+        constructor(url?, options?, block? : (builder : Coulomb.Connection)=>void) {
             var block_given = block !== null;
-            if ( url.is_a( Hash ) ) {
-                options = ConnectionOptions.from( url );
+            if ( is_a( url, 'object' ) ) {
+                options = Coulomb.ConnectionOptions.from( url );
                 url = options.url;
             } else {
-                options = ConnectionOptions.from( options );
+                options = Coulomb.ConnectionOptions.from( options );
             }
 
-            this._headers = new Utils.Headers();
-            this._params = new Utils.ParamsHash();
+            this._headers = new Coulomb.Utils.Headers();
+            this._params = new Coulomb.Utils.ParamsHash();
             this._options = options.request;
             this._ssl = options.ssl;
             this._parallel_manager = null;
             this._default_parallel_manager = options.parallel_manager;
+            this._proxy = null;
 
             this._builder = options.builder || options.new_builder();
 
@@ -55,23 +61,23 @@ module Coulomb {
             }
 
             if ( block_given ) {
-                block.call( this );
+                block( this );
             }
         }
 
-        get params() : Utils.ParamsHash { return this._params; }
-        set params(other : Utils.ParamsHash) { this._params.replace( other ); }
+        get params() : Coulomb.Utils.ParamsHash { return this._params; }
+        set params(other : Coulomb.Utils.ParamsHash) { this._params.replace( other ); }
 
-        get headers() : Utils.Headers { return this._headers; }
-        set headers(other : Utils.Headers) { this._headers.replace( other ); }
+        get headers() : Coulomb.Utils.Headers { return this._headers; }
+        set headers(other : Coulomb.Utils.Headers) { this._headers.replace( other ); }
 
         /*!
          *
          */
-        run_request(method : Methods, url : string, body : string, headers? : Utils.Headers, block?) {
+        run_request(method : Methods, url : string, body : string, headers? : Coulomb.Utils.Headers, block?) {
             var block_given = block !== void 0 && block !== null;
             // TODO: method が Methods になかった場合…そんなものは無いかｗ
-            var request = build_request( Methods[method].toLowerCase(), (request_builder) => {
+            var request = this.build_request( Methods[method].toLowerCase(), (request_builder) => {
                 if ( url === void 0 ) {
                     request_builder.url = url;
                 }
@@ -82,7 +88,7 @@ module Coulomb {
                     request_builder.body = body;
                 }
                 if ( block_given ) {
-                    block.call( request_builder );
+                    block( request_builder );
                 }
             } );
             return request;
@@ -94,15 +100,25 @@ module Coulomb {
         build_request(method : string, block?) {
             var block_given = block !== void 0 && block !== null;
 
-            Request.create( method, (request_builder) => {
+            Coulomb.Request.create( method, (request_builder) => {
                 request_builder.params = this._params.dup();
                 request_builder.headers = this._headers.dup();
                 request_builder.options  = this._options.merge( { proxy: this._proxy } );
 
                 if ( block_given ) {
-                    block.call( request_builder );
+                    block( request_builder );
                 }
             } );
         }
+
+        private _params : Coulomb.Utils.ParamsHash ;
+        private _headers : Coulomb.Utils.Headers;
+        private _url_prefix : string;
+        private _builder : Coulomb.Builder;
+        private _options : Coulomb.Options;
+        private _proxy;
+        private _ssl : Coulomb.SslHash;
+        private _parallel_manager : Coulomb.Utils.ParallelManager;
+        private _default_parallel_manager : Coulomb.Utils.ParallelManager;
     }
 }

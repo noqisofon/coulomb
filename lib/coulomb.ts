@@ -2,6 +2,8 @@
 
 export module Coulomb {
 
+    var default_connection_options : Coulomb.ConnectionOptions;
+
     /*!
      * 
      */
